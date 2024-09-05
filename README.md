@@ -44,22 +44,22 @@ There are currently two options: `view` or `save`.
 
 **Command:**
 
-	python md2recipe.py view [RECIPE_URL]
+	python recipe2md.py view [RECIPE_URL]
 
 **Example:**
 
-	python md2recipe.py view https://www.seriouseats.com/potato-wedges-recipe-5217319
+	python recipe2md.py view https://www.seriouseats.com/potato-wedges-recipe-5217319
 
 
 ### Save to Markdown
 
 **Command:**
 
-	python md2recipe.py save [RECIPE_URL]
+	python recipe2md.py save [RECIPE_URL]
 
 **Example:**
 
-	python md2recipe.py save https://www.seriouseats.com/potato-wedges-recipe-5217319
+	python recipe2md.py save https://www.seriouseats.com/potato-wedges-recipe-5217319
 
 Saves a recipe from a given URL, as well as the default picture associated with the recipe. The default save location is `./local`.
 
