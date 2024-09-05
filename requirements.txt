@@ -1,5 +1,5 @@
 rich~=13.7.1
-recipe_scrapers~=14.56.0
+recipe_scrapers~=15.1.0
 pyyaml~=6.0.1
 platformdirs~=4.2.2
 lxml
