@@ -31,6 +31,7 @@ click_extras = click.option(
 click_translate = click.option(
     "--translate", is_flag=True, default=False, help="Translate the content of the recipe using Google Translate."
 )
+click_name = click.option("--name", "-n", type=str, default=None, help="Name of the recipe.")
 
 
 @click.group()
@@ -49,22 +50,6 @@ def camel_case_splitter(word: str) -> str:
     """
     split = re.sub("([A-Z][a-z]+)", r" \1", re.sub("([A-Z]+)", r" \1", word)).split()
     return " ".join(split).capitalize()
-
-
-def format_file_name(recipe_title: str) -> str:
-    """Convert the recipe title to a nice format.
-
-    Args:
-        recipe_title (str): a string containing a recipe title.
-    Returns:
-        str: formatted title
-    """
-    s = list(recipe_title.lower())
-
-    for i, char in enumerate(s):
-        if char.isspace():
-            s[i] = "-"
-    return "".join(s)
 
 
 def get_console_width() -> int:
@@ -104,12 +89,13 @@ def scrape_recipe(recipe_url: str) -> type[AbstractScraper]:
 
 
 def generate_markdown(
-    recipe_url: str, category: str, extras: list[str], translate: bool
+    recipe_url: str, name: str, category: str, extras: list[str], translate: bool
 ) -> (str, str, type[AbstractScraper]):
     """Given a recipe URL, scrape and generate the markdown content.
 
     Args:
         recipe_url (str): url string from a recipe website.
+        name (str): Name of recipe for the metadata and filename.
         category (str): Category in which the recipe belongs.
         extras (list[str]): Extra tags for the recipe (among spicy, sweet, salty, sour, bitter, and umami).
         translate (bool): Flag on whether to translate the recipe using Google Translate.
@@ -122,13 +108,13 @@ def generate_markdown(
         return "", "", AbstractScraper()
 
     # Format title
-    title = scraper.title()
+    title = scraper.title() if name is None else name
     ingredients = scraper.ingredients()
     instructions = scraper.instructions_list()
 
     # Download accompanying image
     image_file_extension = scraper.image().split(".")[-1]
-    image_filename = f"{format_file_name(title)}.{image_file_extension}"
+    image_filename = f"{title}.{image_file_extension}"
 
     # Handle translation if flagged
     if translate:
@@ -141,16 +127,17 @@ def generate_markdown(
     markdown_content = ""
     markdown_content += textwrap.dedent(f"""\
             ---
-            title: {title}
+            title: {title.capitalize()}
             category: {category.capitalize()}
             source: {recipe_url}
             image: {image_filename}
             size: {scraper.yields()}
-            time: {scraper.total_time()} mins
-            nutrition:\n""")
+            time: {scraper.total_time()} mins\n""")
     # Nutrition components
-    for nutrient, quantity in scraper.nutrients().items():
-        markdown_content += f"\t- {camel_case_splitter(nutrient).replace(' content', '')} {quantity}\n"
+    if len(scraper.nutrients()) > 0:
+        markdown_content += "nutrition:\n"
+        for nutrient, quantity in scraper.nutrients().items():
+            markdown_content += f"\t- {camel_case_splitter(nutrient).replace(' content', '')} {quantity}\n"
     for extra in extras:
         markdown_content += f"{extra}: x\n"
     markdown_content += "---\n"
@@ -178,11 +165,12 @@ def print_markdown(md_content: str) -> None:
     console.print("\n", md, "\n")
 
 
-def save_md_to_file(markdown_content: str, image_filename: str, scraper: type[AbstractScraper]) -> str:
+def save_md_to_file(markdown_content: str, name: str, image_filename: str, scraper: type[AbstractScraper]) -> str:
     """Save recipe Markdown to file and download accompanying image.
 
     Args:
         markdown_content (str): Markdown content for the recipe.
+        name (str): Name of recipe for the metadata and filename.
         image_filename (str): Filename for the accompanying image.
         scraper (AbstractScraper): Dictionary containing scraped data.
 
@@ -190,8 +178,8 @@ def save_md_to_file(markdown_content: str, image_filename: str, scraper: type[Ab
         (str, str): Path to saved markdown file and saved image.
     """
     # Format title, create markdown file
-    title = format_title(scraper)
-    recipe_file = DIRECTORY / f"{format_file_name(title)}.md"
+    title = format_title(scraper.title()) if name is None else format_title(name)
+    recipe_file = DIRECTORY / f"{title}.md"
 
     # Download accompanying image
     image_path = DIRECTORY / image_filename
@@ -210,18 +198,19 @@ def save_md_to_file(markdown_content: str, image_filename: str, scraper: type[Ab
 @click_category
 @click_extras
 @click_translate
-def view(recipe_url: str, prompt_save: bool, category: str, extras: list[str], translate: bool) -> None:
+def view(recipe_url: str, prompt_save: bool, name: str, category: str, extras: list[str], translate: bool) -> None:
     """Scrape a recipe URL and print a markdown-formatted recipe to terminal output.
 
     Args:
         recipe_url (str): A URL string from a recipe website.
         prompt_save (bool): Whether to prompt the user to save the recipe.
+        name (str): Name of recipe for the metadata and filename.
         category (str): Category in which the recipe belongs.
         extras (list[str]): Extra tags for the recipe (among veggie, spicy, sweet, salty, sour, bitter, and umami).
         translate (bool): Flag on whether to translate the recipe using Google Translate.
     """
     try:
-        md_content, image_filename, scraper = generate_markdown(recipe_url, category, extras, translate)
+        md_content, image_filename, scraper = generate_markdown(recipe_url, name, category, extras, translate)
         print_markdown(md_content)
 
         if prompt_save:
@@ -236,7 +225,7 @@ def view(recipe_url: str, prompt_save: bool, category: str, extras: list[str], t
             after_view_answer = inquirer.prompt(after_view_question)
             if after_view_answer["after_view"] == "Save this recipe":
                 try:
-                    save_md_to_file(md_content, image_filename, scraper)
+                    save_md_to_file(md_content, name, image_filename, scraper)
                     logger.info("Recipe saved successfully.")
                 except Exception as e:
                     logger.error(f"Error saving the recipe: {str(e)}")
@@ -250,20 +239,22 @@ def view(recipe_url: str, prompt_save: bool, category: str, extras: list[str], t
 
 @cli.command()
 @click.argument("recipe_url")
+@click_name
 @click_category
 @click_extras
 @click_translate
-def save(recipe_url: str, category: str, extras: list[str], translate: bool) -> None:
+def save(recipe_url: str, name: str, category: str, extras: list[str], translate: bool) -> None:
     """Scrape recipe from URL, parse to Markdown and save to file
 
     Args:
         recipe_url (str): URL of the recipe to scrape.
+        name (str): Name of recipe for the metadata and filename.
         category (str): Category in which the recipe belongs.
         extras (list[str]): Extra tags for the recipe (among veggie, spicy, sweet, salty, sour, bitter, and umami).
         translate (bool): Flag on whether to translate the recipe using Google Translate.
     """
-    md_content, image_filename, scraper = generate_markdown(recipe_url, category, extras, translate)
-    save_md_to_file(md_content, image_filename, scraper)
+    md_content, image_filename, scraper = generate_markdown(recipe_url, name, category, extras, translate)
+    save_md_to_file(md_content, name, image_filename, scraper)
 
 
 if __name__ == "__main__":
