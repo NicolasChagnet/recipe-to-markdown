@@ -32,34 +32,54 @@ This is a fork of the excellent [Pure Recipe](https://github.com/atiumcache/pure
 
 1. Clone the repository or download `pure_recipe.py` and `requirements.txt`.
 2. Install the required Python dependencies:
-	
- 		pip install -r requirements.txt
+```bash	
+pip install -r requirements.txt
+```
 
 
 ## Usage
 
-There are currently two options: `view` or `save`. 
+There are currently two options: `view` or `save`. Both admit various customization options as highlighted in the help section:
+```
+Usage: recipe2md.py save [OPTIONS] RECIPE_URL
+
+  Scrape recipe from URL, parse to Markdown and save to file.
+
+Options:
+  -n, --name TEXT                 Name of the recipe.
+  --category TEXT                 Category in which the recipe belongs.
+  -e, --extra [veggie|spicy|sweet|salty|sour|bitter|umami]
+                                  Extra tags for the recipe (among veggie,
+                                  spicy, sweet, salty, sour, bitter, and
+                                  umami).
+  --translate                     Translate the content of the recipe using
+                                  Google Translate.
+  --help                          Show this message and exit.
+```
 
 ### View in Terminal
 
 **Command:**
-
-	python recipe2md.py view [RECIPE_URL]
+```bash
+python recipe2md.py view [RECIPE_URL]
+```
 
 **Example:**
-
-	python recipe2md.py view https://www.seriouseats.com/potato-wedges-recipe-5217319
-
+```bash
+python recipe2md.py view https://www.seriouseats.com/potato-wedges-recipe-5217319
+```
 
 ### Save to Markdown
 
 **Command:**
-
-	python recipe2md.py save [RECIPE_URL]
+```bash
+python recipe2md.py save [RECIPE_URL]
+```
 
 **Example:**
-
-	python recipe2md.py save https://www.seriouseats.com/potato-wedges-recipe-5217319
+```bash
+python recipe2md.py save https://www.seriouseats.com/potato-wedges-recipe-5217319
+```
 
 Saves a recipe from a given URL, as well as the default picture associated with the recipe. The default save location is `./local`.
 

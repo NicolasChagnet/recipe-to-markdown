@@ -114,7 +114,7 @@ def generate_markdown(
 
     # Download accompanying image
     image_file_extension = scraper.image().split(".")[-1]
-    image_filename = f"{title}.{image_file_extension}"
+    image_filename = f"{format_title(title)}.{image_file_extension}"
 
     # Handle translation if flagged
     if translate:
@@ -140,14 +140,13 @@ def generate_markdown(
             markdown_content += f"\t- {camel_case_splitter(nutrient).replace(' content', '')} {quantity}\n"
     for extra in extras:
         markdown_content += f"{extra}: x\n"
-    markdown_content += "---\n"
+    markdown_content += "---\n\n"
     # Print all ingredients
     for ingredient in ingredients:
         markdown_content += f"* {ingredient}\n"
+    markdown_content += "\n"
     # Print all instructions
-    for instruction in instructions:
-        markdown_content += "\n\n---\n\n"
-        markdown_content += f"> {instruction}"
+    markdown_content += "\n\n---\n\n".join([f"> {instruction}" for instruction in instructions])
 
     return markdown_content, image_filename, scraper
 
@@ -192,7 +191,7 @@ def save_md_to_file(markdown_content: str, name: str, image_filename: str, scrap
     return recipe_file, image_file
 
 
-@cli.command()
+@cli.command(help="Scrape a recipe URL and print a markdown-formatted recipe to terminal output.")
 @click.argument("recipe_url")
 @click.option("--prompt-save", default=True, help="Turn on/off the prompt to save the markdown output to file.")
 @click_category
@@ -237,14 +236,14 @@ def view(recipe_url: str, prompt_save: bool, name: str, category: str, extras: l
         logger.error(f"An error occurred: {str(e)}\n")
 
 
-@cli.command()
+@cli.command(help="Scrape recipe from URL, parse to Markdown and save to file.")
 @click.argument("recipe_url")
 @click_name
 @click_category
 @click_extras
 @click_translate
 def save(recipe_url: str, name: str, category: str, extras: list[str], translate: bool) -> None:
-    """Scrape recipe from URL, parse to Markdown and save to file
+    """Scrape recipe from URL, parse to Markdown and save to file.
 
     Args:
         recipe_url (str): URL of the recipe to scrape.
