@@ -1,10 +1,10 @@
-import argparse
 import os
 import re
 import shutil
 import textwrap
 from pathlib import Path
 
+import click
 import inquirer
 import requests
 from loguru import logger
@@ -17,8 +17,13 @@ DIRECTORY = Path("./local/")
 console = Console()
 
 
+@click.group()
+def cli() -> None:
+    pass
+
+
 def camel_case_splitter(word: str) -> str:
-    """Converts a camelCase word into a sentence.
+    """Convert a camelCase word into a sentence.
 
     Args:
         word (str): CamelCase word
@@ -31,7 +36,7 @@ def camel_case_splitter(word: str) -> str:
 
 
 def format_file_name(recipe_title: str) -> str:
-    """Converts the recipe title to a nice format.
+    """Convert the recipe title to a nice format.
 
     Args:
         recipe_title (str): a string containing a recipe title.
@@ -44,20 +49,6 @@ def format_file_name(recipe_title: str) -> str:
         if char.isspace():
             s[i] = "-"
     return "".join(s)
-
-
-def main() -> None:
-    # Parse arguments
-    args = parse_arguments()
-    try:
-        if args.operations == "view":
-            view_recipe(args.url, prompt_save=True)
-        elif args.operations == "save":
-            save_recipe_to_markdown(*generate_markdown(args.url))
-        else:
-            logger.error("Invalid operation. See documentation.")
-    except Exception as e:
-        logger.error(f"An error occurred: {str(e)}")
 
 
 def get_console_width() -> int:
@@ -74,7 +65,7 @@ def clear_console() -> None:
 
 
 def format_title(scraper: dict) -> str:
-    """Formats recipe title."""
+    """Format recipe title."""
     return scraper.title().replace(" ", "-")
 
 
@@ -124,8 +115,8 @@ def generate_markdown(recipe_url: str) -> (str, str, dict):
     return markdown_content, image_filename, scraper
 
 
-def save_recipe_to_markdown(markdown_content: str, image_filename: str, scraper: dict) -> str:
-    """Saves recipe Markdown to file with accompanying image downloaded.
+def save_md_to_file(markdown_content: str, image_filename: str, scraper: dict) -> str:
+    """Save recipe Markdown to file and download accompanying image.
 
     Args:
         markdown_content (str): Markdown content for the recipe.
@@ -163,8 +154,11 @@ def print_markdown(md_content: str) -> None:
     console.print("\n", md, "\n")
 
 
-def view_recipe(recipe_url: str, prompt_save: bool = True) -> None:
-    """Scrapes a recipe URL and prints a markdown-formatted recipe to terminal output.
+@cli.command()
+@click.argument("recipe_url")
+@click.option("--prompt-save", default=True, help="Turn on/off the prompt to save the markdown output to file.")
+def view(recipe_url: str, prompt_save: bool = True) -> None:
+    """Scrape a recipe URL and print a markdown-formatted recipe to terminal output.
 
     Args:
         recipe_url (str): A URL string from a recipe website.
@@ -186,38 +180,29 @@ def view_recipe(recipe_url: str, prompt_save: bool = True) -> None:
             after_view_answer = inquirer.prompt(after_view_question)
             if after_view_answer["after_view"] == "Save this recipe":
                 try:
-                    save_recipe_to_markdown(md_content, image_filename, scraper)
+                    save_md_to_file(md_content, image_filename, scraper)
                     logger.info("Recipe saved successfully.")
                 except Exception as e:
                     logger.error(f"Error saving the recipe: {str(e)}")
             elif after_view_answer["after_view"] == "Quit":
                 return
-    except IOError as e:
+    except OSError as e:
         logger.error(f"I/O error({e.errno}): {e.strerror}")
     except Exception as e:
         logger.error(f"An error occurred: {str(e)}\n")
 
 
-def parse_arguments() -> argparse.Namespace:
-    """Parse command-line arguments for the Recipe to Markdown program.
+@cli.command()
+@click.argument("recipe_url")
+def save(recipe_url: str) -> None:
+    """Scrape recipe from URL, parse to Markdown and save to file
 
-    This function sets up an argument parser for the Pure Recipe program,
-    which is designed to make recipes pretty again. It defines two arguments:
-    - `operations`: A required positional argument that specifies the operation
-      to be performed. It must be one of "view" or "save".
-    - `url`: An optional positional argument that specifies a URL. If not provided,
-      it defaults to "foo".
-
-    Returns:
-        Namespace: An argparse.Namespace object containing the parsed arguments.
+    Args:
+        recipe_url (str): URL of the recipe to scrape.
     """
-    parser = argparse.ArgumentParser(prog="Recipe to Markdown", description="Make recipes pretty again.")
-
-    parser.add_argument("operations", choices=["view", "save"])
-    parser.add_argument("url", default="foo", nargs="?")
-
-    return parser.parse_args()
+    md_content, image_filename, scraper = generate_markdown(recipe_url)
+    save_md_to_file(md_content, image_filename, scraper)
 
 
 if __name__ == "__main__":
-    main()
+    cli()
