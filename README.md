@@ -8,7 +8,6 @@ This is a fork of the excellent [Pure Recipe](https://github.com/atiumcache/pure
 	- [Usage](#usage)
 		- [View in Terminal](#view-in-terminal)
 		- [Save to Markdown](#save-to-markdown)
-	- [Configuration](#configuration)
 	- [Supported Websites](#supported-websites)
 	- [Troubleshooting](#troubleshooting)
 	- [Future Work](#future-work)
@@ -21,19 +20,21 @@ This is a fork of the excellent [Pure Recipe](https://github.com/atiumcache/pure
 - Save recipes to markdown for easy access and sharing.
 - Support for a wide range of cooking sites.
 - Easy-to-use command-line interface.
+- Translate recipes to English automatically.
+- Format Markdown recipes in a format compatible with the Nyum recipe manager.
 
 ## Installation
 
 **Pre-requisites:**
 
-- Python 3.6 or higher.
+- Python 3.10 or higher.
 
 **Steps:**
 
-1. Clone the repository or download `pure_recipe.py` and `requirements.txt`.
+1. Clone the repository or download one of the binaries in the `dist/` folder.
 2. Install the required Python dependencies:
 ```bash	
-pip install -r requirements.txt
+pip install .
 ```
 
 
@@ -41,19 +42,23 @@ pip install -r requirements.txt
 
 There are currently two options: `view` or `save`. Both admit various customization options as highlighted in the help section:
 ```
-Usage: recipe2md.py save [OPTIONS] RECIPE_URL
+Usage: recipe2md view [OPTIONS] RECIPE_URL
 
-  Scrape recipe from URL, parse to Markdown and save to file.
+  Scrape a recipe URL and print a markdown-formatted recipe to terminal
+  output.
 
 Options:
-  -n, --name TEXT                 Name of the recipe.
-  --category TEXT                 Category in which the recipe belongs.
+  --prompt-save BOOLEAN           Turn on/off the prompt to save the markdown
+                                  output to file.
+  -c, --category TEXT             Category in which the recipe belongs.
   -e, --extra [veggie|spicy|sweet|salty|sour|bitter|umami]
                                   Extra tags for the recipe (among veggie,
                                   spicy, sweet, salty, sour, bitter, and
                                   umami).
-  --translate                     Translate the content of the recipe using
+  -t, --translate                 Translate the content of the recipe using
                                   Google Translate.
+  -o, --out DIRECTORY             Folder where the output files are to be
+                                  stored.
   --help                          Show this message and exit.
 ```
 
@@ -81,12 +86,8 @@ python recipe2md.py save [RECIPE_URL]
 python recipe2md.py save https://www.seriouseats.com/potato-wedges-recipe-5217319
 ```
 
-Saves a recipe from a given URL, as well as the default picture associated with the recipe. The default save location is `./local`.
+Saves a recipe from a given URL, as well as the default picture associated with the recipe. The default save location is the current folder but can be changed using the `--out/-o` option.
 
-
-## Configuration
-
-TODO
 
 ## Supported Websites
 
