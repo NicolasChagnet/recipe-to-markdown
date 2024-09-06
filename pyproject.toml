@@ -1,0 +1,22 @@
+[project]
+name = "recipe2md"
+version = "0.1.0"
+description = "Input a recipe URL and receive well-formatted, ad-free recipes to your terminal, or save the output to a markdown file compatible with nyum recipe book."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.1.7",
+    "deep-translator>=1.11.4",
+    "inquirer>=3.4.0",
+    "loguru>=0.7.2",
+    "pathlib>=1.0.1",
+    "recipe-scrapers>=15.1.0",
+    "rich>=13.8.0",
+]
+
+[project.scripts]
+recipe2md = "recipe2md:cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

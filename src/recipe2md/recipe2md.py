@@ -37,6 +37,7 @@ click_folder = click.option(
     "-o",
     type=click.Path(exists=True, dir_okay=True, file_okay=False, writable=True, path_type=Path),
     default=Path("."),
+    help="Folder where the output files are to be stored.",
 )
 
 
