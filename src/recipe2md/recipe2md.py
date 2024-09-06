@@ -18,7 +18,7 @@ REGEX_SPLIT = r"(\d+)(?!.*\d)"  # Used to split a string after its last number
 
 console = Console()
 
-click_category = click.option("--category", type=str, default="", help="Category in which the recipe belongs.")
+click_category = click.option("--category", "-c", type=str, default="", help="Category in which the recipe belongs.")
 click_extras = click.option(
     "--extra",
     "-e",
@@ -29,7 +29,7 @@ click_extras = click.option(
     help="Extra tags for the recipe (among veggie, spicy, sweet, salty, sour, bitter, and umami).",
 )
 click_translate = click.option(
-    "--translate", is_flag=True, default=False, help="Translate the content of the recipe using Google Translate."
+    "--translate", "-t", is_flag=True, default=False, help="Translate the content of the recipe using Google Translate."
 )
 click_name = click.option("--name", "-n", type=str, default=None, help="Name of the recipe.")
 click_folder = click.option(
